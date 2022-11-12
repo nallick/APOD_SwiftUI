@@ -1,0 +1,23 @@
+{
+  "pins" : [
+    {
+      "identity" : "basenetwork",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nallick/BaseNetwork.git",
+      "state" : {
+        "revision" : "a199cb1afc12ca055819a66a2d0130c8cd79454c",
+        "version" : "1.2.0"
+      }
+    },
+    {
+      "identity" : "baseswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/nallick/BaseSwift.git",
+      "state" : {
+        "revision" : "c09dd58b8d4b25c3558bc3b4437f4c8effd4ecdf",
+        "version" : "1.2.0"
+      }
+    }
+  ],
+  "version" : 2
+}
