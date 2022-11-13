@@ -38,10 +38,9 @@ public enum API {
         public static let apiKeyQuery = URLQueryItem(name: "api_key", value: Constants.apiKey)
     }
 
-    public typealias PictureOfTheDayPublisher =   // Output: AstronomyPictureOfTheDay, Failure: ApiError
-    Publishers.MapError<Publishers.Decode<Publishers.TryMap<AnyPublisher<URLSession.DataTaskPublisher.Output,URLError>, JSONDecoder.Input>,AstronomyPictureOfTheDay,JSONDecoder>,ApiError>
+    public typealias PictureOfTheDayPublisher = Publisher<AstronomyPictureOfTheDay, ApiError>
 
-    public static func pictureOfTheDayPublisher(date: Date? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy, timeout: TimeInterval = 60.0, source publisherProvider: DataPublisherProvider = URLSession.shared) -> PictureOfTheDayPublisher {
+    public static func pictureOfTheDayPublisher(date: Date? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy, timeout: TimeInterval = 60.0, source publisherProvider: DataPublisherProvider = URLSession.shared) -> some PictureOfTheDayPublisher {
         publisherProvider
             .dataPublisher(for: URLRequest.pictureOfTheDay(date: date, cachePolicy: cachePolicy, timeout: timeout))
             .tryMap { data, response in

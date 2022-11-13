@@ -83,7 +83,7 @@ public class PictureOfTheDay: ObservableObject {
         }
     }
 
-    private func loadPictureDescription(from publisher: API.PictureOfTheDayPublisher) {
+    private func loadPictureDescription(from publisher: some API.PictureOfTheDayPublisher) {
         var pipeline: AnyCancellable?
         pipeline = publisher
             .sink { [weak self] completion in
@@ -97,7 +97,7 @@ public class PictureOfTheDay: ObservableObject {
             }
     }
 
-    private static func image(from publisher: API.PictureOfTheDayPublisher, urlLoader: URLLoader, urlLoaderSessionType: URLLoader.SessionType) async -> Result<NSImage?, ApiError> {
+    private static func image(from publisher: some API.PictureOfTheDayPublisher, urlLoader: URLLoader, urlLoaderSessionType: URLLoader.SessionType) async -> Result<NSImage?, ApiError> {
         await publisher
             .filter { $0.mediaType == .image }
             .map(\.url)
