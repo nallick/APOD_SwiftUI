@@ -41,7 +41,10 @@ public class PictureOfTheDay: ObservableObject {
     }
 
     private func pictureOfTheDayResult() async -> Result<AstronomyPictureOfTheDay, ApiError> {
-        await API.pictureOfTheDayResult(date: self.date, source: self.urlLoader.ephemeralUrlSession)
+//        await API.pictureOfTheDayResult(date: self.date, source: self.urlLoader.ephemeralUrlSession)
+        await API.pictureOfTheDayTask(date: self.date, source: self.urlLoader.ephemeralUrlSession)
+            .result
+            .mapError { ApiError.from(error: $0) }
     }
 
     private nonisolated func loadViaConcurrency() {

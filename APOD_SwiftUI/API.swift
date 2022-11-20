@@ -13,6 +13,7 @@ public enum ApiError: Error {
     case download(underlying: Error)
     case request(underlying: URLError)
     case response(URLResponse)
+    case cancelled
     case unknown
     case none
 
@@ -26,6 +27,7 @@ public enum ApiError: Error {
             case let apiError as ApiError: return apiError
             case let decodingError as DecodingError: return .decode(underlying: decodingError)
             case let urlError as URLError: return .request(underlying: urlError)
+            case is CancellationError: return .cancelled
             default: return .unknown
         }
     }
@@ -49,6 +51,15 @@ public enum API {
             }
             .decode(type: AstronomyPictureOfTheDay.self, decoder: JSONDecoder())
             .mapError { ApiError.from(error: $0) }
+    }
+
+    public static func pictureOfTheDayTask(date: Date? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy, timeout: TimeInterval = 60.0, source asyncLoader: AsyncDataLoader = URLSession.shared) async -> Task<AstronomyPictureOfTheDay, Error> {
+        Task {
+            let request = URLRequest.pictureOfTheDay(date: date, cachePolicy: cachePolicy, timeout: timeout)
+            let dataAndResponse = try await asyncLoader.data(for: request)
+            guard let httpResponse = dataAndResponse.1 as? HTTPURLResponse, httpResponse.statusCode == 200 else { throw ApiError.response(dataAndResponse.1) }
+            return try JSONDecoder().decode(AstronomyPictureOfTheDay.self, from: dataAndResponse.0)
+        }
     }
 
     public static func pictureOfTheDay(date: Date? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy, timeout: TimeInterval = 60.0, source asyncLoader: AsyncDataLoader = URLSession.shared) async throws -> AstronomyPictureOfTheDay {

@@ -79,6 +79,69 @@ class PictureOfTheDayConcurrencyTests: XCTestCase {
 
 extension PictureOfTheDayConcurrencyTests {
 
+    func testPictureOfTheDayTaskSucceeds() async throws {
+        let expectedResult = PictureOfTheDayTests.astronomyPictureOfTheDay(mediaType: .video)
+
+        var actualUrlRequests: [URLRequest] = []
+        URLProtocolMock.requestHandler = { request in
+            actualUrlRequests.append(request)
+            return PictureOfTheDayTests.astronomyPictureOfTheDayResponse(mediaType: .video)
+        }
+
+        let actualResult = try await API.pictureOfTheDayTask(source: URLProtocolMock.urlSession).value
+
+        let actualRequest = actualUrlRequests.first
+        XCTAssertEqual(actualUrlRequests.count, 1)
+        XCTAssertEqual(actualRequest?.method, .get)
+        XCTAssertEqual(actualRequest?.url?.scheme, "https")
+        XCTAssertEqual(actualRequest?.url?.host, "api.nasa.gov")
+        XCTAssertEqual(actualRequest?.url?.path, "/planetary/apod")
+        XCTAssert(actualRequest?.url?.query?.contains(API.Constants.apiKeyQuery.description) == true)
+
+        XCTAssertEqual(actualResult, expectedResult)
+    }
+
+    func testPictureOfTheDayTaskFailsWithRequestError() async throws {
+        let expectedError = NSError(domain: NSURLErrorDomain, code: -1)
+        URLProtocolMock.requestHandler = { _ in throw expectedError }
+
+        var actualError: NSError?
+        let actualResult = await API.pictureOfTheDayTask(source: URLProtocolMock.urlSession).result.mapError { ApiError.from(error: $0) }
+        if case .request(let error) = actualResult.error { actualError = error as NSError }
+
+        XCTAssertEqual(actualError?.domain, expectedError.domain)
+        XCTAssertEqual(actualError?.code, expectedError.code)
+    }
+
+    func testPictureOfTheDayTaskFailsWithInvalidStatusCode() async throws {
+        let expectedResponse = HTTPURLResponse(url: URL(string: "https://api.nasa.gov")!, statusCode: 400, httpVersion: nil, headerFields: nil)!
+        URLProtocolMock.requestHandler = { _ in (response: expectedResponse, data: nil) }
+
+        var actualResponse: HTTPURLResponse?
+        let actualResult = await API.pictureOfTheDayTask(source: URLProtocolMock.urlSession).result.mapError { ApiError.from(error: $0) }
+        if case .response(let response) = actualResult.error { actualResponse = response as? HTTPURLResponse }
+
+        XCTAssertEqual(actualResponse?.url, expectedResponse.url)
+        XCTAssertEqual(actualResponse?.statusCode, expectedResponse.statusCode)
+    }
+
+    func testPictureOfTheDayTaskFailsWithDecodeError() async throws {
+        URLProtocolMock.requestHandler = { _ in
+            let invalidJSON = "invalid JSON".data(using: .utf8)!
+            return (response: HTTPURLResponse(), data: invalidJSON)
+        }
+
+        var actualError: NSError?
+        let actualResult = await API.pictureOfTheDayTask(source: URLProtocolMock.urlSession).result.mapError { ApiError.from(error: $0) }
+        if case .decode(underlying: let error) = actualResult.error { actualError = error as NSError }
+
+        XCTAssertEqual(actualError?.domain, NSCocoaErrorDomain)
+        XCTAssertEqual(actualError?.code, NSCoderReadCorruptError)
+    }
+}
+
+extension PictureOfTheDayConcurrencyTests {
+
     func testAlternatePictureOfTheDaySucceeds() async throws {
         let expectedResult = PictureOfTheDayTests.astronomyPictureOfTheDay(mediaType: .video)
 
@@ -126,6 +189,72 @@ extension PictureOfTheDayConcurrencyTests {
 
         var actualError: NSError?
         let actualResult = await API.pictureOfTheDayResult(source: mockAsyncDataLoader)
+        if case .decode(underlying: let error) = actualResult.error { actualError = error as NSError }
+
+        XCTAssertEqual(actualError?.domain, NSCocoaErrorDomain)
+        XCTAssertEqual(actualError?.code, NSCoderReadCorruptError)
+    }
+}
+
+extension PictureOfTheDayConcurrencyTests {
+
+    func testPictureOfTheDayTaskFailsWithCancelled() async throws {
+        let mockAsyncDataLoader = MockAsyncDataLoader(isCancelled: true)
+
+        var isCancelled = false
+        let actualResult = await API.pictureOfTheDayTask(source: mockAsyncDataLoader).result.mapError { ApiError.from(error: $0) }
+        if case .cancelled = actualResult.error { isCancelled = true }
+
+        XCTAssertTrue(isCancelled)
+    }
+
+    func testAlternatePictureOfTheDayTaskSucceeds() async throws {
+        let expectedResult = PictureOfTheDayTests.astronomyPictureOfTheDay(mediaType: .video)
+
+        let mockAsyncDataLoader = MockAsyncDataLoader(response: .mockHttpSuccess, responseBody: PictureOfTheDayTests.astronomyPictureOfTheDayData(mediaType: .video))
+
+        let actualResult = try await API.pictureOfTheDayTask(source: mockAsyncDataLoader).value
+
+        let actualRequest = mockAsyncDataLoader.requests.first
+        XCTAssertEqual(mockAsyncDataLoader.requests.count, 1)
+        XCTAssertEqual(actualRequest?.method, .get)
+        XCTAssertEqual(actualRequest?.url?.scheme, "https")
+        XCTAssertEqual(actualRequest?.url?.host, "api.nasa.gov")
+        XCTAssertEqual(actualRequest?.url?.path, "/planetary/apod")
+        XCTAssert(actualRequest?.url?.query?.contains(API.Constants.apiKeyQuery.description) == true)
+
+        XCTAssertEqual(actualResult, expectedResult)
+    }
+
+    func testAlternatePictureOfTheDayTaskFailsWithRequestError() async throws {
+        let expectedError = URLError(.notConnectedToInternet)
+        let mockAsyncDataLoader = MockAsyncDataLoader(responseError: expectedError)
+
+        var actualError: URLError?
+        let actualResult = await API.pictureOfTheDayTask(source: mockAsyncDataLoader).result.mapError { ApiError.from(error: $0) }
+        if case .request(let error) = actualResult.error { actualError = error }
+
+        XCTAssertEqual(actualError, expectedError)
+    }
+
+    func testAlternatePictureOfTheDayTaskFailsWithInvalidStatusCode() async throws {
+        let expectedResponse = HTTPURLResponse(url: URL(string: "https://api.nasa.gov")!, statusCode: 400, httpVersion: nil, headerFields: nil)!
+        let mockAsyncDataLoader = MockAsyncDataLoader(response: expectedResponse)
+
+        var actualResponse: HTTPURLResponse?
+        let actualResult = await API.pictureOfTheDayTask(source: mockAsyncDataLoader).result.mapError { ApiError.from(error: $0) }
+        if case .response(let response) = actualResult.error { actualResponse = response as? HTTPURLResponse }
+
+        XCTAssertEqual(actualResponse?.url, expectedResponse.url)
+        XCTAssertEqual(actualResponse?.statusCode, expectedResponse.statusCode)
+    }
+
+    func testAlternatePictureOfTheDayTaskFailsWithDecodeError() async throws {
+        let invalidJSON = "invalid JSON".data(using: .utf8)!
+        let mockAsyncDataLoader = MockAsyncDataLoader(response: .mockHttpSuccess, responseBody: invalidJSON)
+
+        var actualError: NSError?
+        let actualResult = await API.pictureOfTheDayTask(source: mockAsyncDataLoader).result.mapError { ApiError.from(error: $0) }
         if case .decode(underlying: let error) = actualResult.error { actualError = error as NSError }
 
         XCTAssertEqual(actualError?.domain, NSCocoaErrorDomain)
