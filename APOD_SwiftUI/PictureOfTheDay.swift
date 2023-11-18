@@ -1,7 +1,7 @@
 //
 //  PictureOfTheDay.swift
 //
-//  Copyright © 2019-2022 Purgatory Design. All rights reserved.
+//  Copyright © 2019-2023 Purgatory Design. All rights reserved.
 //
 
 import BaseNetwork
@@ -13,7 +13,7 @@ import SwiftUI
 public class PictureOfTheDay: ObservableObject {
 
     @Published public private(set) var picture: Result<AstronomyPictureOfTheDay, ApiError> = Result.failure(.none)
-    @Published public private(set) var image: Result<NSImage?, ApiError> = Result.success(nil)
+    @Published public private(set) var image: Result<Image?, ApiError> = Result.success(nil)
 
     public private(set) var date: Date
 
@@ -61,7 +61,7 @@ public class PictureOfTheDay: ObservableObject {
             let fileUrlResult = await Result { try await self.urlLoader.downloadToFile(URLRequest(url: pictureOfTheDay.url), session: self.urlLoaderSessionType) }
             switch fileUrlResult {
                 case .success(let url):
-                    let image = NSImage(contentsOf: url)
+                    let image = NSImage(contentsOf: url).map { Image(nsImage: $0) }
                     try? FileManager.default.removeItem(at: url)
                     Task { @MainActor in self.image = .success(image); print("🤠🤠🤠 image loaded") }
                 case .failure(let error):
@@ -100,7 +100,7 @@ public class PictureOfTheDay: ObservableObject {
             }
     }
 
-    private static func image(from publisher: some API.PictureOfTheDayPublisher, urlLoader: URLLoader, urlLoaderSessionType: URLLoader.SessionType) async -> Result<NSImage?, ApiError> {
+    private static func image(from publisher: some API.PictureOfTheDayPublisher, urlLoader: URLLoader, urlLoaderSessionType: URLLoader.SessionType) async -> Result<Image?, ApiError> {
         await publisher
             .filter { $0.mediaType == .image }
             .map(\.url)
@@ -108,9 +108,9 @@ public class PictureOfTheDay: ObservableObject {
                 urlLoader
                     .downloadPublisher(URLRequest(url: $0), session: urlLoaderSessionType) { _, taskID in print("🤖 begin:", taskID) }
                     .mapError { ApiError.download(underlying: $0) }
-                    .map { url -> NSImage? in
+                    .map { url -> Image? in
                         defer { try? FileManager.default.removeItem(at: url) }
-                        return NSImage(contentsOf: url)
+                        return NSImage(contentsOf: url).map { Image(nsImage: $0) }
                     }
             }
             .asyncResult()

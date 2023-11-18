@@ -29,7 +29,7 @@ struct ContentView: View {
                         .frame(width: 500, alignment: .topLeading)
                         .padding()
                 } else {
-                    Image(nsImage: (pictureOfTheDay.image.value ?? nil) ?? NSImage())
+                    pictureOfTheDay.image.value ?? Image(nsImage: NSImage())
                 }
             }
         } else if let error = pictureOfTheDay.picture.error, error.isError {
