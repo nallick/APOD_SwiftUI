@@ -15,8 +15,10 @@
 		0107036225E2A4FE00D0565B /* AstronomyPictureOfTheDay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0107036025E2A4FE00D0565B /* AstronomyPictureOfTheDay.swift */; };
 		0107036325E2A4FE00D0565B /* API.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0107036125E2A4FE00D0565B /* API.swift */; };
 		0107036D25E2A79F00D0565B /* PictureOfTheDay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0107036C25E2A79F00D0565B /* PictureOfTheDay.swift */; };
+		0194B0B12B0BC6D60019A267 /* AfluentExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0194B0B02B0BC6D60019A267 /* AfluentExtensions.swift */; };
 		01B25B902602C217003430BD /* PictureOfTheDayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01B25B8F2602C217003430BD /* PictureOfTheDayTests.swift */; };
 		01B25B942602CBCB003430BD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 01B25B932602CBCB003430BD /* Assets.xcassets */; };
+		01C91B8D2B094940005C85B1 /* Afluent in Frameworks */ = {isa = PBXBuildFile; productRef = 01C91B8C2B094940005C85B1 /* Afluent */; };
 		CA60B340288E0F9E0026E44A /* BaseSwift in Frameworks */ = {isa = PBXBuildFile; productRef = CA60B33F288E0F9E0026E44A /* BaseSwift */; };
 		CA60B342288E0F9E0026E44A /* BaseSwiftMocks in Frameworks */ = {isa = PBXBuildFile; productRef = CA60B341288E0F9E0026E44A /* BaseSwiftMocks */; };
 		CA60B345288E10AC0026E44A /* BaseNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = CA60B344288E10AC0026E44A /* BaseNetwork */; };
@@ -48,6 +50,7 @@
 		0107036025E2A4FE00D0565B /* AstronomyPictureOfTheDay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AstronomyPictureOfTheDay.swift; sourceTree = "<group>"; };
 		0107036125E2A4FE00D0565B /* API.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = API.swift; sourceTree = "<group>"; };
 		0107036C25E2A79F00D0565B /* PictureOfTheDay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureOfTheDay.swift; sourceTree = "<group>"; };
+		0194B0B02B0BC6D60019A267 /* AfluentExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AfluentExtensions.swift; sourceTree = "<group>"; };
 		01B25B8F2602C217003430BD /* PictureOfTheDayTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureOfTheDayTests.swift; sourceTree = "<group>"; };
 		01B25B932602CBCB003430BD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CAFA5FBF28846F0500E07ACA /* PictureOfTheDayConcurrencyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PictureOfTheDayConcurrencyTests.swift; sourceTree = "<group>"; };
@@ -59,6 +62,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				01C91B8D2B094940005C85B1 /* Afluent in Frameworks */,
 				CA60B345288E10AC0026E44A /* BaseNetwork in Frameworks */,
 				CA60B340288E0F9E0026E44A /* BaseSwift in Frameworks */,
 			);
@@ -96,6 +100,7 @@
 		0107032425E2A3BA00D0565B /* APOD_SwiftUI */ = {
 			isa = PBXGroup;
 			children = (
+				0194B0B02B0BC6D60019A267 /* AfluentExtensions.swift */,
 				0107036125E2A4FE00D0565B /* API.swift */,
 				0107032525E2A3BA00D0565B /* APOD_SwiftUIApp.swift */,
 				0107036025E2A4FE00D0565B /* AstronomyPictureOfTheDay.swift */,
@@ -149,6 +154,7 @@
 			packageProductDependencies = (
 				CA60B33F288E0F9E0026E44A /* BaseSwift */,
 				CA60B344288E10AC0026E44A /* BaseNetwork */,
+				01C91B8C2B094940005C85B1 /* Afluent */,
 			);
 			productName = APOD_SwiftUI;
 			productReference = 0107032225E2A3BA00D0565B /* APOD_SwiftUI.app */;
@@ -206,6 +212,7 @@
 			packageReferences = (
 				CA60B33E288E0F9E0026E44A /* XCRemoteSwiftPackageReference "BaseSwift" */,
 				CA60B343288E10AC0026E44A /* XCRemoteSwiftPackageReference "BaseNetwork" */,
+				01C91B8B2B094940005C85B1 /* XCRemoteSwiftPackageReference "Afluent" */,
 			);
 			productRefGroup = 0107032325E2A3BA00D0565B /* Products */;
 			projectDirPath = "";
@@ -247,6 +254,7 @@
 				0107036325E2A4FE00D0565B /* API.swift in Sources */,
 				0107036D25E2A79F00D0565B /* PictureOfTheDay.swift in Sources */,
 				0107032625E2A3BA00D0565B /* APOD_SwiftUIApp.swift in Sources */,
+				0194B0B12B0BC6D60019A267 /* AfluentExtensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -325,7 +333,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -382,7 +390,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
@@ -410,7 +418,6 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.PurgatoryDesign.APOD-SwiftUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -437,7 +444,6 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.PurgatoryDesign.APOD-SwiftUI";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -463,7 +469,6 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.PurgatoryDesign.APOD-SwiftUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -490,7 +495,6 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.PurgatoryDesign.APOD-SwiftUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -532,6 +536,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		01C91B8B2B094940005C85B1 /* XCRemoteSwiftPackageReference "Afluent" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Tyler-Keith-Thompson/Afluent.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.2.3;
+			};
+		};
 		CA60B33E288E0F9E0026E44A /* XCRemoteSwiftPackageReference "BaseSwift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/nallick/BaseSwift.git";
@@ -551,6 +563,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		01C91B8C2B094940005C85B1 /* Afluent */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 01C91B8B2B094940005C85B1 /* XCRemoteSwiftPackageReference "Afluent" */;
+			productName = Afluent;
+		};
 		CA60B33F288E0F9E0026E44A /* BaseSwift */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = CA60B33E288E0F9E0026E44A /* XCRemoteSwiftPackageReference "BaseSwift" */;

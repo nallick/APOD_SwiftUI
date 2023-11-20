@@ -1,9 +1,10 @@
 //
 //  API.swift
 //
-//  Copyright © 2019 Purgatory Design. All rights reserved.
+//  Copyright © 2019, 2023 Purgatory Design. All rights reserved.
 //
 
+import Afluent
 import BaseSwift
 import Combine
 import Foundation
@@ -40,6 +41,23 @@ public enum API {
         public static let apiKeyQuery = URLQueryItem(name: "api_key", value: Constants.apiKey)
     }
 
+    public static func pictureOfTheDay(date: Date? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy, timeout: TimeInterval = 60.0, source asyncLoader: AsyncDataLoader = URLSession.shared) async throws -> AstronomyPictureOfTheDay {
+        let request = URLRequest.pictureOfTheDay(date: date, cachePolicy: cachePolicy, timeout: timeout)
+        let dataAndResponse = try await asyncLoader.data(for: request)
+        guard let httpResponse = dataAndResponse.1 as? HTTPURLResponse, httpResponse.statusCode == 200 else { throw ApiError.response(dataAndResponse.1) }
+        return try JSONDecoder().decode(AstronomyPictureOfTheDay.self, from: dataAndResponse.0)
+    }
+
+    public static func pictureOfTheDayResult(date: Date? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy, timeout: TimeInterval = 60.0, source asyncLoader: AsyncDataLoader = URLSession.shared) async -> Result<AstronomyPictureOfTheDay, ApiError> {
+        let result = await Result { try await self.pictureOfTheDay(date: date, cachePolicy: cachePolicy, timeout: timeout, source: asyncLoader) }
+        return result.mapError { ApiError.from(error: $0) }
+    }
+}
+
+//  Use Combine
+//
+extension API {
+
     public typealias PictureOfTheDayPublisher = Publisher<AstronomyPictureOfTheDay, ApiError>
 
     public static func pictureOfTheDayPublisher(date: Date? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy, timeout: TimeInterval = 60.0, source publisherProvider: DataPublisherProvider = URLSession.shared) -> some PictureOfTheDayPublisher {
@@ -52,6 +70,11 @@ public enum API {
             .decode(type: AstronomyPictureOfTheDay.self, decoder: JSONDecoder())
             .mapError { ApiError.from(error: $0) }
     }
+}
+
+//  Use Swift Concurrency
+//
+extension API {
 
     public static func pictureOfTheDayTask(date: Date? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy, timeout: TimeInterval = 60.0, source asyncLoader: AsyncDataLoader = URLSession.shared) async -> Task<AstronomyPictureOfTheDay, Error> {
         Task {
@@ -62,16 +85,29 @@ public enum API {
         }
     }
 
-    public static func pictureOfTheDay(date: Date? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy, timeout: TimeInterval = 60.0, source asyncLoader: AsyncDataLoader = URLSession.shared) async throws -> AstronomyPictureOfTheDay {
-        let request = URLRequest.pictureOfTheDay(date: date, cachePolicy: cachePolicy, timeout: timeout)
-        let dataAndResponse = try await asyncLoader.data(for: request)
-        guard let httpResponse = dataAndResponse.1 as? HTTPURLResponse, httpResponse.statusCode == 200 else { throw ApiError.response(dataAndResponse.1) }
-        return try JSONDecoder().decode(AstronomyPictureOfTheDay.self, from: dataAndResponse.0)
+    public static func pictureOfTheDayResultFromTask(date: Date? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy, timeout: TimeInterval = 60.0, source asyncLoader: AsyncDataLoader = URLSession.shared) async -> Result<AstronomyPictureOfTheDay, ApiError> {
+        await self.pictureOfTheDayTask(date: date, cachePolicy: cachePolicy, timeout: timeout, source: asyncLoader)
+            .result
+            .mapError { ApiError.from(error: $0) }
     }
+}
 
-    public static func pictureOfTheDayResult(date: Date? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy, timeout: TimeInterval = 60.0, source asyncLoader: AsyncDataLoader = URLSession.shared) async -> Result<AstronomyPictureOfTheDay, ApiError> {
-        let result = await Result { try await self.pictureOfTheDay(date: date, cachePolicy: cachePolicy, timeout: timeout, source: asyncLoader) }
-        return result.mapError { ApiError.from(error: $0) }
+//  Use Afluent
+//
+extension API {
+
+    public typealias PictureOfTheDayUnitOfWork = AsynchronousUnitOfWork<AstronomyPictureOfTheDay>
+
+    public static func pictureOfTheDayUnitOfWork(date: Date? = nil, cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy, timeout: TimeInterval = 60.0, source asyncLoader: AsyncDataLoader = URLSession.shared) async -> some PictureOfTheDayUnitOfWork {
+        DeferredTask {
+            let request = URLRequest.pictureOfTheDay(date: date, cachePolicy: cachePolicy, timeout: timeout)
+            return try await asyncLoader.data(for: request)
+        }
+        .tryMap { data, response in
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else { throw ApiError.response(response) }
+            return data
+        }
+        .decode(type: AstronomyPictureOfTheDay.self, decoder: JSONDecoder())
     }
 }
 

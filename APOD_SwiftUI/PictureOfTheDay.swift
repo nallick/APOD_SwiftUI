@@ -4,6 +4,7 @@
 //  Copyright © 2019-2023 Purgatory Design. All rights reserved.
 //
 
+import Afluent
 import BaseNetwork
 import BaseSwift
 import Combine
@@ -36,38 +37,28 @@ public class PictureOfTheDay: ObservableObject {
     }
 
     public nonisolated func load() {
-        self.loadViaConcurrency()
+        self.loadViaAfluentLibrary()
+//        self.loadViaConcurrency()
 //        self.loadViaPublisher()
     }
 
-    private func pictureOfTheDayResult() async -> Result<AstronomyPictureOfTheDay, ApiError> {
-//        await API.pictureOfTheDayResult(date: self.date, source: self.urlLoader.ephemeralUrlSession)
-        await API.pictureOfTheDayTask(date: self.date, source: self.urlLoader.ephemeralUrlSession)
-            .result
-            .mapError { ApiError.from(error: $0) }
+    private nonisolated func loadViaAfluentLibrary() {
+        Task {
+            let pictureOfTheDayResult = await API.pictureOfTheDayUnitOfWork(date: self.date, source: self.urlLoader.ephemeralUrlSession)
+                .nonthrowingResult
+                .mapError { ApiError.from(error: $0) }
+            self.updatePicture(pictureOfTheDayResult)
+
+            await self.loadImageViaConcurrency(from: pictureOfTheDayResult)
+        }
     }
 
     private nonisolated func loadViaConcurrency() {
         Task {
-            let pictureOfTheDayResult = await self.pictureOfTheDayResult()
-            Task { @MainActor in self.picture = pictureOfTheDayResult; print("🤠🤠 picture loaded") }
+            let pictureOfTheDayResult = await API.pictureOfTheDayResultFromTask()
+            self.updatePicture(pictureOfTheDayResult)
 
-            guard let pictureOfTheDay = pictureOfTheDayResult.value, pictureOfTheDay.mediaType == .image else {
-                Task { @MainActor in self.image = Result.success(nil) }
-                print("🤠🤠🤠 no image to load")
-                return
-            }
-
-            let fileUrlResult = await Result { try await self.urlLoader.downloadToFile(URLRequest(url: pictureOfTheDay.url), session: self.urlLoaderSessionType) }
-            switch fileUrlResult {
-                case .success(let url):
-                    let image = NSImage(contentsOf: url).map { Image(nsImage: $0) }
-                    try? FileManager.default.removeItem(at: url)
-                    Task { @MainActor in self.image = .success(image); print("🤠🤠🤠 image loaded") }
-                case .failure(let error):
-                    Task { @MainActor in self.image = .failure(ApiError.download(underlying: error)); print("🤠🤠🤠 image load failed") }
-            }
-            print("🤠 load complete")
+            await self.loadImageViaConcurrency(from: pictureOfTheDayResult)
         }
     }
 
@@ -75,29 +66,45 @@ public class PictureOfTheDay: ObservableObject {
         Task {
             let pictureOfTheDayPublisher = await API.pictureOfTheDayPublisher(date: self.date, source: self.urlLoader.ephemeralUrlSession)
 
-//            await self.loadPictureDescription(from: pictureOfTheDayPublisher)
+            let pictureOfTheDayResult = await pictureOfTheDayPublisher.asyncResult()
+            self.updatePicture(pictureOfTheDayResult)
 
-            let picture = await pictureOfTheDayPublisher.asyncResult()
-            Task { @MainActor in self.picture = picture; print("🤠🤠 picture loaded") }
-
-            let image = await Self.image(from: pictureOfTheDayPublisher, urlLoader: self.urlLoader, urlLoaderSessionType: self.urlLoaderSessionType)
-            Task { @MainActor in self.image = image; print("🤠🤠🤠 image loaded") }
+            let imageResult = await Self.image(from: pictureOfTheDayPublisher, urlLoader: self.urlLoader, urlLoaderSessionType: self.urlLoaderSessionType)
+            self.updateImage(imageResult)
             print("🤠 load complete")
         }
     }
 
-    private func loadPictureDescription(from publisher: some API.PictureOfTheDayPublisher) {
-        var pipeline: AnyCancellable?
-        pipeline = publisher
-            .sink { [weak self] completion in
-                pipeline = nil
-                if case .failure(let error) = completion { Task { self?.picture = Result.failure(error) }}
-            } receiveValue: { [weak self] result in
-                Task { self?.picture = Result.success(result) }
-                pipeline?.cancel()
-                pipeline = nil
-                print("🤠🤠 picture loaded")
-            }
+    private nonisolated func updatePicture(_ pictureOfTheDayResult: Result<AstronomyPictureOfTheDay, ApiError>) {
+        Task { @MainActor in
+            self.picture = pictureOfTheDayResult
+            print("🤠🤠 picture loaded")
+        }
+    }
+
+    private nonisolated func updateImage(_ image: Result<Image?, ApiError>, log: String? = nil) {
+        Task { @MainActor in
+            self.image = image
+            print(log ?? "🤠🤠🤠 image loaded")
+        }
+    }
+
+    private nonisolated func loadImageViaConcurrency(from pictureOfTheDayResult: Result<AstronomyPictureOfTheDay, ApiError>) async {
+        guard let pictureOfTheDay = pictureOfTheDayResult.value, pictureOfTheDay.mediaType == .image else {
+            self.updateImage(.success(nil), log: "🤠🤠🤠 no image to load")
+            return
+        }
+
+        let fileUrlResult = await Result { try await self.urlLoader.downloadToFile(URLRequest(url: pictureOfTheDay.url), session: self.urlLoaderSessionType) }
+        switch fileUrlResult {
+            case .success(let url):
+                let image = NSImage(contentsOf: url).map { Image(nsImage: $0) }
+                try? FileManager.default.removeItem(at: url)
+                self.updateImage(.success(image))
+            case .failure(let error):
+                self.updateImage(.failure(ApiError.download(underlying: error)), log: "🤠🤠🤠 image load failed")
+        }
+        print("🤠 load complete")
     }
 
     private static func image(from publisher: some API.PictureOfTheDayPublisher, urlLoader: URLLoader, urlLoaderSessionType: URLLoader.SessionType) async -> Result<Image?, ApiError> {
